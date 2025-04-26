@@ -1,0 +1,3 @@
+[submodule "Shared/Contracts"]
+	path = Shared/Contracts
+	url = https://github.com/GringoXY/4-gamers-contracts
