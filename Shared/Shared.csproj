@@ -9,6 +9,22 @@
 	<ItemGroup>
 		<PackageReference Include="FluentValidation" Version="11.9.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
+		<PackageReference Include="RazorLight" Version="2.3.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Contracts\Contracts\Templates\Emails\OrderCreatedEvent.cshtml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Contracts\Contracts\Templates\Emails\OrderStateUpdatedEvent.cshtml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Templates\Emails\OrderCreatedEvent.cshtml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Templates\Emails\OrderStateUpdatedEvent.cshtml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

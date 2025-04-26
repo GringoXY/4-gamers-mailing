@@ -1,0 +1,98 @@
+@model Contracts.Events.Order.OrderCreatedEvent
+
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .header {
+            text-align: center;
+        }
+        .header img {
+            max-width: 150px;
+        }
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .content {
+            margin-top: 20px;
+        }
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .products-table th, .products-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .products-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+        @* @if (!string.IsNullOrEmpty(Model.LogoBase64))
+        {
+            <img src="@Model.LogoBase64" alt="4Gamers Logo" />
+        } *@
+        <div class="company-name">4Gamers</div>
+    </div>
+    <div class="content">
+        <h2>Order Confirmation - Order @Model.Id</h2>
+        <p>Hello @Model.ShipToName,</p>
+        <p>Thank you for your purchase. Your order has been successfully received.</p>
+        <h3>Shipping Details</h3>
+        <p><strong>Address:</strong> @Model.ShipToCountry @Model.ShipToCity @Model.ShipToPostalCode @Model.ShipToStateOrProvince </p>
+        <p><strong>Shipping Method:</strong> @Model.DeliveryId</p>
+        <h3>Order Details</h3>
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Model.Products)
+                {
+                    <tr>
+                        <td>@product.ProductId</td>
+                        <td>@product.ProductQuantity.ToString("C")</td>
+                        <td>
+                                @if (product.ProductDiscountedPrice.HasValue)
+                                {
+                                    @product.ProductDiscountedPrice.Value.ToString("C")
+                                }
+                                else
+                                {
+                                    @product.ProductPrice.ToString("C")
+                                }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p>If you have any questions, please contact our support team.</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -4,8 +4,7 @@ using Shared.Repositories;
 using System.Net.Mail;
 using AutoMapper;
 using Contracts.Dtos;
-using Contracts.Factories;
-using Shared.Entities;
+using Shared.Factories;
 
 namespace Infrastructure.BackgroundServices;
 
@@ -72,7 +71,7 @@ public class SendEmailBackgroundService : BackgroundService
             {
                 var inboxMessageDto = _mapper.Map<InboxMessageDto>(inboxMessage);
                 var @event = inboxMessageDto.CreateEvent();
-                var template = @event.GetTemplate();
+                var template = await @event.GetTemplateAsync();
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_sendEmailOptions.Smtp.Username),

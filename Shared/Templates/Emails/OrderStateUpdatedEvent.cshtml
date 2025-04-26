@@ -1,0 +1,66 @@
+@model Contracts.Events.Order.OrderStateUpdatedEvent
+
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+            .header img {
+                max-width: 150px;
+            }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .content {
+            margin-top: 20px;
+        }
+
+        .status {
+            padding: 10px;
+            background-color: #e7f3fe;
+            border-left: 5px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+           @*  @if (!string.IsNullOrEmpty(Model.LogoBase64))
+            {
+                <img src="@Model.LogoBase64" alt="4Gamers Logo" />
+            } *@
+            <div class="company-name">4Gamers</div>
+        </div>
+        <div class="content">
+            <h2>Order state update - Order @Model.Id</h2>
+            <div class="status">
+                <p>Your order status has been updated to: <strong>@Model.State</strong></p>
+                <p>Updated at: @Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+            </div>
+            <p>Thank you for shopping with us!</p>
+        </div>
+    </div>
+</body>
+</html>
