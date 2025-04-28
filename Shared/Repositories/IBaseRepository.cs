@@ -3,10 +3,6 @@ using System.Linq.Expressions;
 
 namespace Shared.Repositories;
 
-/// <summary>
-/// Represents an interface for base repository
-/// </summary>
-/// <typeparam name="TEntity">Class entity type for instance <see cref="Entities.User.User"/></typeparam>
 public interface IBaseRepository<TEntity> where TEntity : BaseEntity
 {
     /// <summary>

@@ -1,8 +1,8 @@
-﻿using Shared.Entities;
-using Contracts.Extensions;
+﻿using Contracts.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using Shared.Repositories;
+using Shared.Entities;
 
 namespace Infrastructure.EF.PostgreSQL.Repositories;
 

@@ -19,12 +19,6 @@
 	  <None Update="Contracts\Contracts\Templates\Emails\OrderStateUpdatedEvent.cshtml">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
-	  <None Update="Templates\Emails\OrderCreatedEvent.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Templates\Emails\OrderStateUpdatedEvent.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
 	</ItemGroup>
 
 </Project>

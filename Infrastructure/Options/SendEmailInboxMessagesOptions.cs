@@ -1,8 +1,8 @@
 ﻿namespace Infrastructure.Options;
 
-public class SendEmailOptions
+public class SendEmailInboxMessagesOptions
 {
-    public static readonly string SectionName = "BackgroundServices:SendEmail";
+    public static readonly string SectionName = "BackgroundServices:SendEmailInboxMessages";
 
     public const string IntervalFormat = "d'.'hh':'mm':'ss";
 

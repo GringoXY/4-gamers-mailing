@@ -36,5 +36,5 @@ public class BaseEntity
     /// Helper property which determines
     /// whether entity was deleted
     /// </summary>
-    public bool IsDeleted => this.DeletedAt.HasValue;
+    public bool IsDeleted => DeletedAt.HasValue;
 }

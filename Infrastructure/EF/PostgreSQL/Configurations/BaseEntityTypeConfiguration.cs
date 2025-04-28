@@ -1,6 +1,6 @@
-﻿using Shared.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Shared.Entities;
 
 namespace Infrastructure.EF.PostgreSQL.Configurations;
 

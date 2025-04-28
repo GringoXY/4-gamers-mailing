@@ -22,12 +22,12 @@ public static class ServiceCollectionExtensions
     private static void LoadSettings(this IServiceCollection services, ConfigurationManager configuration)
         => services
             .Configure<OutboxMessagesConsumerOptions>(configuration.GetSection(OutboxMessagesConsumerOptions.SectionName))
-            .Configure<SendEmailOptions>(configuration.GetSection(SendEmailOptions.SectionName))
+            .Configure<SendEmailInboxMessagesOptions>(configuration.GetSection(SendEmailInboxMessagesOptions.SectionName))
             .Configure<PostgreSQLOptions>(configuration.GetSection(PostgreSQLOptions.SectionName));
 
     private static IServiceCollection AddHostedServices(this IServiceCollection services)
         => services.AddHostedService<OutboxMessagesConsumerBackgroundService>()
-                   .AddHostedService<SendEmailBackgroundService>();
+                   .AddHostedService<SendEmailInboxMessagesBackgroundService>();
 
     /// <summary>
     /// Adds auto mapper profiles
