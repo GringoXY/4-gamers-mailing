@@ -39,7 +39,7 @@ public class InvoiceDocument(OrderCreatedEvent orderEvent) : IDocument
             row.RelativeItem().Column(column =>
             {
                 column.Item()
-                    .Text($"Invoice #{OrderEvent.Id}")
+                    .Text($"Invoice #{OrderEvent.Id.ToString()[..3]}/{OrderEvent.CreatedAt.Month}/{OrderEvent.CreatedAt.Year}")
                     .FontSize(20).SemiBold().FontColor(Colors.Blue.Medium);
 
                 column.Item().Text(text =>
