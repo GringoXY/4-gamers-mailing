@@ -47,7 +47,12 @@ public class InvoiceDocument(OrderCreatedEvent orderEvent) : IDocument
                     text.Span("Issue date: ").SemiBold();
                     text.Span($"{OrderEvent.CreatedAt:d}");
                 });
-                // TODO: Add "Due to" date
+
+                column.Item().Text(text =>
+                {
+                    text.Span("Due date: ").SemiBold();
+                    text.Span($"{OrderEvent.CreatedAt.AddDays(14):d}");
+                });
             });
 
             row.ConstantItem(100).Height(50).Placeholder();
