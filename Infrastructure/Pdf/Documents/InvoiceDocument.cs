@@ -98,6 +98,16 @@ public class InvoiceDocument(OrderCreatedEvent orderEvent) : IDocument
         });
     }
 
+    private void ComposeRemarks(IContainer container)
+    {
+        container.Background(Colors.Grey.Lighten3).Padding(10).Column(column =>
+        {
+            column.Spacing(5);
+            column.Item().Text("Remarks").FontSize(14);
+            column.Item().Text(OrderEvent.Remarks);
+        });
+    }
+
     private void ComposeContent(IContainer container)
     {
         container.PaddingVertical(40).Column(column =>
@@ -133,14 +143,15 @@ public class InvoiceDocument(OrderCreatedEvent orderEvent) : IDocument
                 );
             });
 
-            column.Item().Element(ComposeTable);
+            column.Item().PaddingTop(25).Element(ComposeTable);
 
             var totalPrice = OrderEvent.Products.Sum(x => (x.ProductDiscountedPrice ?? x.ProductPrice) * x.ProductQuantity);
-            column.Item().AlignRight().Text($"Grand total: {OrderEvent.TotalPay:C}").FontSize(14);
+            column.Item().AlignRight().Text($"Total to pay: {OrderEvent.TotalPay:C}").FontSize(14);
 
-            // TODO: Add remarks & description
-            //if (!string.IsNullOrWhiteSpace(Model.Comments))
-            //    column.Item().PaddingTop(25).Element(ComposeComments);
+            if (string.IsNullOrWhiteSpace(OrderEvent.Remarks) is false)
+            {
+                column.Item().PaddingTop(25).Element(ComposeRemarks);
+            }
         });
     }
 }
