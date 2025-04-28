@@ -107,6 +107,12 @@ public class SendEmailBackgroundService : BackgroundService
         {
             _logger.LogError(ex, "An error occurred during the saving updated inbox messages");
         }
+
+        var processedInboxMessages = inboxMessages.Where(om => om.IsProcessed);
+        var notProcessedInboxMessages = inboxMessages.Except(processedInboxMessages).ToList();
+        processedInboxMessages = processedInboxMessages.ToList();
+        _logger.LogInformation($"Processed {processedInboxMessages.Count()} inbox message(s).");
+        _logger.LogWarning($"Not processed {notProcessedInboxMessages.Count()} inbox message(s).");
     }
 
     public override void Dispose()

@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #cdcdcd;
             margin: 0;
             padding: 0;
         }
@@ -16,6 +16,7 @@
             background: #fff;
             padding: 20px;
             border: 1px solid #ddd;
+            border-radius: 5px;
         }
         .header {
             text-align: center;
@@ -44,6 +45,9 @@
         .products-table th {
             background-color: #f2f2f2;
         }
+        h2, h3 {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -56,12 +60,13 @@
         <div class="company-name">4Gamers</div>
     </div>
     <div class="content">
-        <h2>Order Confirmation - Order @Model.Id</h2>
-        <p>Hello @Model.ShipToName,</p>
+        <h2>Order Confirmation</h2>
+        <h3>Order @Model.Id</h3>
+        <p>Hello <b>@Model.ShipToName</b>,</p>
         <p>Thank you for your purchase. Your order has been successfully received.</p>
         <h3>Shipping Details</h3>
         <p><strong>Address:</strong> @Model.ShipToCountry @Model.ShipToCity @Model.ShipToPostalCode @Model.ShipToStateOrProvince </p>
-        <p><strong>Shipping Method:</strong> @Model.DeliveryId</p>
+        <p><strong>Shipping Method:</strong> @Model.DeliveryName - @((Model.DeliveryDiscountedPrice ?? Model.DeliveryPrice).ToString("C"))</p>
         <h3>Order Details</h3>
         <table class="products-table">
             <thead>
@@ -75,22 +80,16 @@
                 @foreach (var product in Model.Products)
                 {
                     <tr>
-                        <td>@product.ProductId</td>
-                        <td>@product.ProductQuantity.ToString("C")</td>
-                        <td>
-                                @if (product.ProductDiscountedPrice.HasValue)
-                                {
-                                    @product.ProductDiscountedPrice.Value.ToString("C")
-                                }
-                                else
-                                {
-                                    @product.ProductPrice.ToString("C")
-                                }
-                        </td>
+                        <td>@product.ProductCompanyName @product.ProductModel</td>
+                        <td>@product.ProductQuantity</td>
+                        <td>@((product.ProductDiscountedPrice ?? product.ProductPrice).ToString("C"))</td>
                     </tr>
                 }
             </tbody>
         </table>
+        <p>Total to pay: @Model.TotalPay.ToString("C")</p>
+        <p>Send payment to: <b>18 1090 2402 9488 5238 7642 8441</b><br />with title: <b>@Model.Id</b>.</p>
+        <p>Invoice attachment was sent to your billing e-mail.</p>
         <p>If you have any questions, please contact our support team.</p>
     </div>
   </div>
