@@ -13,38 +13,37 @@ namespace Infrastructure.BackgroundServices;
 public class OutboxMessagesConsumerBackgroundService : BackgroundService
 {
     private readonly ILogger<OutboxMessagesConsumerBackgroundService> _logger;
-    private IConnection _connection;
-    private IChannel _channel;
-    private readonly OutboxMessagesConsumerOptions _outboxMessageConsumer;
+    private IConnection _outboxMessageConsumerConnection;
+    private IChannel _outboxMessageConsumerChannel;
+    private readonly OutboxMessagesConsumerOptions _outboxMessageConsumerOptions;
     private readonly IInboxMessageRepository _inboxMessageRepository;
 
     public OutboxMessagesConsumerBackgroundService(
         ILogger<OutboxMessagesConsumerBackgroundService> logger,
-        IOptions<OutboxMessagesConsumerOptions> outboxMessageConsumer,
+        IOptions<OutboxMessagesConsumerOptions> outboxMessageConsumerOptions,
         IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
-        _outboxMessageConsumer = outboxMessageConsumer.Value;
+        _outboxMessageConsumerOptions = outboxMessageConsumerOptions.Value;
         _inboxMessageRepository = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IInboxMessageRepository>();
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        _connection = await _outboxMessageConsumer.RabbitMQ.Factory.CreateConnectionAsync(cancellationToken);
-        _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
-        await _channel.QueueDeclareAsync(
-            queue: _outboxMessageConsumer.RabbitMQ.QueueName,
+        _outboxMessageConsumerConnection = await _outboxMessageConsumerOptions.RabbitMQ.Factory.CreateConnectionAsync(cancellationToken);
+        _outboxMessageConsumerChannel = await _outboxMessageConsumerConnection.CreateChannelAsync(cancellationToken: cancellationToken);
+        await _outboxMessageConsumerChannel.QueueDeclareAsync(
+            queue: _outboxMessageConsumerOptions.RabbitMQ.QueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
             arguments: null,
             cancellationToken: cancellationToken);
-
-        _logger.LogInformation("RabbitMQ connection established and queue declared.");
+        _logger.LogInformation("Outbox messages consumer broker (RabbitMQ) connection established and queue declared.");
 
         _logger.LogInformation($"{nameof(OutboxMessagesConsumerBackgroundService)} started at: {DateTime.Now}");
 
-        var consumer = new AsyncEventingBasicConsumer(_channel);
+        var consumer = new AsyncEventingBasicConsumer(_outboxMessageConsumerChannel);
 
         consumer.ReceivedAsync += async (model, ea) =>
         {
@@ -61,7 +60,7 @@ public class OutboxMessagesConsumerBackgroundService : BackgroundService
             try
             {
                 await _inboxMessageRepository.AddAsync(inboxMessage);
-                await _channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);
+                await _outboxMessageConsumerChannel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);
             }
             catch (Exception ex)
             {
@@ -69,8 +68,8 @@ public class OutboxMessagesConsumerBackgroundService : BackgroundService
             }
         };
 
-        await _channel.BasicConsumeAsync(
-            queue: _outboxMessageConsumer.RabbitMQ.QueueName,
+        await _outboxMessageConsumerChannel.BasicConsumeAsync(
+            queue: _outboxMessageConsumerOptions.RabbitMQ.QueueName,
             autoAck: false,
             consumer: consumer,
             cancellationToken: cancellationToken);
@@ -78,8 +77,8 @@ public class OutboxMessagesConsumerBackgroundService : BackgroundService
 
     public override void Dispose()
     {
-        _connection?.Dispose();
-        _channel?.Dispose();
+        _outboxMessageConsumerConnection?.Dispose();
+        _outboxMessageConsumerChannel?.Dispose();
 
         base.Dispose();
     }

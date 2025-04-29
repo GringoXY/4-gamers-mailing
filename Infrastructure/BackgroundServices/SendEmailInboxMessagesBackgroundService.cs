@@ -5,8 +5,9 @@ using System.Net.Mail;
 using AutoMapper;
 using Contracts.Dtos;
 using Shared.Factories;
-using RabbitMQ.Client;
 using Infrastructure.Factories;
+using Shared.Apis;
+using System.Net.Mime;
 
 namespace Infrastructure.BackgroundServices;
 
@@ -18,18 +19,21 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
     private readonly SendEmailInboxMessagesOptions _sendEmailInboxMessagesOptions;
     private readonly IInboxMessageRepository _inboxMessageRepository;
     private readonly IMapper _mapper;
+    private readonly IDocsApi _docsApi;
 
     public SendEmailInboxMessagesBackgroundService(
         ILogger<SendEmailInboxMessagesBackgroundService> logger,
         IOptions<SendEmailInboxMessagesOptions> sendEmailInboxMessagesOptions,
         IServiceScopeFactory serviceScopeFactory,
-        IMapper mapper)
+        IMapper mapper,
+        IDocsApi docsApi)
     {
         _logger = logger;
         _smtpClient = sendEmailInboxMessagesOptions.Value.Smtp.Client;
         _sendEmailInboxMessagesOptions = sendEmailInboxMessagesOptions.Value;
         _inboxMessageRepository = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IInboxMessageRepository>();
         _mapper = mapper;
+        _docsApi = docsApi;
 
         if (TimeSpan.TryParseExact(sendEmailInboxMessagesOptions.Value.Interval, SendEmailInboxMessagesOptions.IntervalFormat, null, out _runAt) is false)
         {
@@ -66,6 +70,7 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
 
     private async Task SendEmailsAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation(System.Threading.Thread.CurrentThread.CurrentCulture.ToString());
         try
         {
             var inboxMessages = await _inboxMessageRepository.GetAsync(im => im.ProcessedAt == null);
@@ -76,7 +81,6 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
                     var inboxMessageDto = _mapper.Map<InboxMessageDto>(inboxMessage);
                     var @event = inboxMessageDto.CreateEvent();
                     var template = await @event.GetTemplateAsync();
-                    var attachment = @event.GetAttachment();
                     var mailMessage = new MailMessage
                     {
                         From = new MailAddress(_sendEmailInboxMessagesOptions.Smtp.Username),
@@ -84,7 +88,15 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
                         Body = template.Body,
                         IsBodyHtml = true,
                     };
-                    mailMessage.Attachments.Add(attachment);
+
+                    var (filename, fileBytes) = await _docsApi.GeneratePdfAsync(@event);
+                    if (filename is not null)
+                    {
+                        var fileStream = new MemoryStream(fileBytes);
+                        var attachment = new Attachment(fileStream, filename, MediaTypeNames.Application.Pdf);
+                        mailMessage.Attachments.Add(attachment);
+                    }
+
                     mailMessage.To.Add(template.To);
 
                     try
@@ -98,6 +110,10 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "An error occurred during the sending email to {recipient}", mailMessage.To);
+                    }
+                    finally
+                    {
+                        mailMessage?.Dispose();
                     }
                 }
                 catch (Exception ex)

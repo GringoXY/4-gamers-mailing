@@ -3,6 +3,8 @@ using Infrastructure.EF.PostgreSQL;
 using Infrastructure.Options;
 using Shared.Repositories;
 using Infrastructure.BackgroundServices;
+using Shared.Apis;
+using Infrastructure.Apis;
 
 namespace Infrastructure.Extensions;
 
@@ -13,6 +15,8 @@ public static class ServiceCollectionExtensions
         services.LoadSettings(configuration);
         services.AddLogging();
         services.AddAutoMapper();
+        services.AddHttpClient();
+        services.AddApis();
         services.AddHostedServices();
         services.AddEntityFramework();
 
@@ -23,6 +27,7 @@ public static class ServiceCollectionExtensions
         => services
             .Configure<OutboxMessagesConsumerOptions>(configuration.GetSection(OutboxMessagesConsumerOptions.SectionName))
             .Configure<SendEmailInboxMessagesOptions>(configuration.GetSection(SendEmailInboxMessagesOptions.SectionName))
+            .Configure<DocsApiOptions>(configuration.GetSection(DocsApiOptions.SectionName))
             .Configure<PostgreSQLOptions>(configuration.GetSection(PostgreSQLOptions.SectionName));
 
     private static IServiceCollection AddHostedServices(this IServiceCollection services)
@@ -78,4 +83,7 @@ public static class ServiceCollectionExtensions
     /// <returns>Modified services collection by <see cref="UnitOfWork"/></returns>
     private static IServiceCollection AddUnitOfWork(this IServiceCollection services)
         => services.AddTransient<IUnitOfWork, UnitOfWork>();
+
+    private static IServiceCollection AddApis(this IServiceCollection services)
+        => services.AddTransient<IDocsApi, DocsApi>();
 }
