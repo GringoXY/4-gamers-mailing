@@ -27,8 +27,15 @@ public class DocsApi : IDocsApi, IDisposable
         var endpointPath = @event switch
         {
             OrderCreatedEvent => "documents/order",
-            _ => throw new ArgumentOutOfRangeException(nameof(@event)),
+            OrderUpdatedEvent => "documents/order/updated",
+            _ => null,
         };
+
+        if (string.IsNullOrWhiteSpace(endpointPath))
+        {
+            return (string.Empty, Array.Empty<byte>());
+        }
+
         var requestContent = new StringContent(
             JsonSerializer.Serialize(@event, @event.GetType()),
             Encoding.UTF8,

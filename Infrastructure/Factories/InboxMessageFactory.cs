@@ -13,6 +13,8 @@ public static class InboxMessageFactory
         {
             OrderEventTypes.OrderCreated => JsonSerializer.Deserialize<OrderCreatedEvent>(message.Payload)
                 ?? throw new InvalidOperationException($"Invalid payload for {nameof(OrderCreatedEvent)}"),
+            OrderEventTypes.OrderUpdated => JsonSerializer.Deserialize<OrderUpdatedEvent>(message.Payload)
+                ?? throw new InvalidOperationException($"Invalid payload for {nameof(OrderUpdatedEvent)}"),
             OrderEventTypes.OrderStateUpdated => JsonSerializer.Deserialize<OrderStateUpdatedEvent>(message.Payload)
                 ?? throw new InvalidOperationException($"Invalid payload for {nameof(OrderStateUpdatedEvent)}"),
             _ => throw new NotSupportedException()

@@ -34,6 +34,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Templates\Emails\OrderUpdatedEvent.cshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Templates\Emails\OrderCreatedEvent.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

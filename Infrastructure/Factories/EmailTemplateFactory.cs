@@ -12,6 +12,7 @@ public static class EmailTemplateFactory
         => @event switch
             {
                 OrderCreatedEvent createdEvent => new EmailTemplate(createdEvent.ShipToEmail, $"New order received: {createdEvent.Id}", await @event.RenderTemplateAsync()),
+                OrderUpdatedEvent updatedEvent => new EmailTemplate(updatedEvent.ShipToEmail, $"Order data has changed: {updatedEvent.Id}", await @event.RenderTemplateAsync()),
                 OrderStateUpdatedEvent stateUpdatedEvent => new EmailTemplate(stateUpdatedEvent.ShipToEmail, $"Order state updated: {stateUpdatedEvent.Id}", await @event.RenderTemplateAsync()),
                 _ => throw new NotSupportedException($"No email template has been defined for event type: {@event.GetType().Name}")
             };

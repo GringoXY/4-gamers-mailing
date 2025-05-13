@@ -70,7 +70,6 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
 
     private async Task SendEmailsAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation(System.Threading.Thread.CurrentThread.CurrentCulture.ToString());
         try
         {
             var inboxMessages = await _inboxMessageRepository.GetAsync(im => im.ProcessedAt == null);
@@ -90,7 +89,7 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
                     };
 
                     var (filename, fileBytes) = await _docsApi.GeneratePdfAsync(@event);
-                    if (filename is not null)
+                    if (string.IsNullOrWhiteSpace(filename) is false)
                     {
                         var fileStream = new MemoryStream(fileBytes);
                         var attachment = new Attachment(fileStream, filename, MediaTypeNames.Application.Pdf);
