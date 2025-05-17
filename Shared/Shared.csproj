@@ -12,13 +12,4 @@
 		<PackageReference Include="RazorLight" Version="2.3.1" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <None Update="Contracts\Contracts\Templates\Emails\OrderCreatedEvent.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Contracts\Contracts\Templates\Emails\OrderStateUpdatedEvent.cshtml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
-
 </Project>
