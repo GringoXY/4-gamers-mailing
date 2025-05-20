@@ -1,13 +1,15 @@
 ﻿using Infrastructure.Options;
 using Microsoft.Extensions.Options;
 using Shared.Repositories;
-using System.Net.Mail;
+using MimeKit;
+using MailKit.Net.Smtp;
 using AutoMapper;
 using Contracts.Dtos;
 using Shared.Factories;
 using Infrastructure.Factories;
 using Shared.Apis;
 using System.Net.Mime;
+using ContentType = MimeKit.ContentType;
 
 namespace Infrastructure.BackgroundServices;
 
@@ -15,9 +17,8 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
 {
     private readonly ILogger<SendEmailInboxMessagesBackgroundService> _logger;
     private readonly TimeSpan _runAt;
-    private readonly SmtpClient _smtpClient;
     private readonly SendEmailInboxMessagesOptions _sendEmailInboxMessagesOptions;
-    private readonly IInboxMessageRepository _inboxMessageRepository;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IMapper _mapper;
     private readonly IDocsApi _docsApi;
 
@@ -29,9 +30,8 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
         IDocsApi docsApi)
     {
         _logger = logger;
-        _smtpClient = sendEmailInboxMessagesOptions.Value.Smtp.Client;
         _sendEmailInboxMessagesOptions = sendEmailInboxMessagesOptions.Value;
-        _inboxMessageRepository = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IInboxMessageRepository>();
+        _serviceScopeFactory = serviceScopeFactory;
         _mapper = mapper;
         _docsApi = docsApi;
 
@@ -70,49 +70,65 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
 
     private async Task SendEmailsAsync(CancellationToken cancellationToken)
     {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var inboxMessageRepository = scope.ServiceProvider.GetRequiredService<IInboxMessageRepository>();
         try
         {
-            var inboxMessages = await _inboxMessageRepository.GetAsync(im => im.ProcessedAt == null);
-            foreach(var inboxMessage in inboxMessages)
+            var inboxMessages = await inboxMessageRepository.GetAsync(im => im.ProcessedAt == null);
+            foreach (var inboxMessage in inboxMessages)
             {
                 try
                 {
                     var inboxMessageDto = _mapper.Map<InboxMessageDto>(inboxMessage);
                     var @event = inboxMessageDto.CreateEvent();
                     var template = await @event.GetTemplateAsync();
-                    var mailMessage = new MailMessage
+
+                    var message = new MimeMessage()
                     {
-                        From = new MailAddress(_sendEmailInboxMessagesOptions.Smtp.Username),
-                        Subject = template.Subject,
-                        Body = template.Body,
-                        IsBodyHtml = true,
+                        Subject = template.Subject
+                    };
+                    message.From.Add(
+                        new MailboxAddress(
+                            _sendEmailInboxMessagesOptions.Smtp.Name,
+                            _sendEmailInboxMessagesOptions.Smtp.Username
+                        ));
+                    message.To.Add(MailboxAddress.Parse(template.To));
+
+                    var builder = new BodyBuilder
+                    {
+                        HtmlBody = template.Body
                     };
 
                     var (filename, fileBytes) = await _docsApi.GeneratePdfAsync(@event);
-                    if (string.IsNullOrWhiteSpace(filename) is false)
+                    if (string.IsNullOrWhiteSpace(filename) is false && fileBytes?.Length > 0)
                     {
-                        var fileStream = new MemoryStream(fileBytes);
-                        var attachment = new Attachment(fileStream, filename, MediaTypeNames.Application.Pdf);
-                        mailMessage.Attachments.Add(attachment);
+                        builder.Attachments.Add(
+                            filename,
+                            fileBytes,
+                            ContentType.Parse(MediaTypeNames.Application.Pdf));
                     }
 
-                    mailMessage.To.Add(template.To);
+                    message.Body = builder.ToMessageBody();
 
                     try
                     {
-                        _logger.LogInformation("Sending email to {recipient}", mailMessage.To);
-                        await _smtpClient.SendMailAsync(mailMessage, cancellationToken);
-                        _logger.LogInformation("Email sent to {recipient}", mailMessage.To);
+                        _logger.LogInformation("Sending email to {recipient}", template.To);
+
+                        using var smtp = new SmtpClient();
+
+                        await smtp.ConnectAsync(_sendEmailInboxMessagesOptions.Smtp.Host, _sendEmailInboxMessagesOptions.Smtp.Port, _sendEmailInboxMessagesOptions.Smtp.EnableSsl, cancellationToken);
+                        await smtp.AuthenticateAsync(_sendEmailInboxMessagesOptions.Smtp.Username, _sendEmailInboxMessagesOptions.Smtp.Password, cancellationToken);
+                        await smtp.SendAsync(message, cancellationToken);
+
+                        await smtp.DisconnectAsync(true, cancellationToken);
+
+                        _logger.LogInformation("Email sent to {recipient}", template.To);
 
                         inboxMessage.MarkAsProcessed();
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "An error occurred during the sending email to {recipient}", mailMessage.To);
-                    }
-                    finally
-                    {
-                        mailMessage?.Dispose();
+                        _logger.LogError(ex, "An error occurred during the sending email to {recipient}", template.To);
                     }
                 }
                 catch (Exception ex)
@@ -121,7 +137,7 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
                 }
             }
 
-            await _inboxMessageRepository.UpdateRangeAsync(inboxMessages);
+            await inboxMessageRepository.UpdateRangeAsync(inboxMessages);
 
             var processedInboxMessages = inboxMessages.Where(om => om.IsProcessed);
             var notProcessedInboxMessages = inboxMessages.Except(processedInboxMessages).ToList();
@@ -133,12 +149,14 @@ public class SendEmailInboxMessagesBackgroundService : BackgroundService
         {
             _logger.LogError(ex, "An error occurred during the saving updated inbox messages");
         }
+
+        _logger.LogInformation("Finished SendEmailsAsync cycle.");
     }
 
     public override void Dispose()
     {
-        _smtpClient?.Dispose();
-
+        _logger.LogInformation($"{nameof(SendEmailInboxMessagesBackgroundService)} is disposing.");
         base.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
