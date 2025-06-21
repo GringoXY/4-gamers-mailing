@@ -31,7 +31,6 @@ public static class ConfigurationManagerExtensions
     /// Add specific JSON file which contains settings for specific environment
     /// </summary>
     /// <param name="configurationManager">Current configuration</param>
-    /// <param name="hostEnvironment"><see cref="IWebHostEnvironment"/></param>
     /// <returns>Modified configuration with JSON file</returns>
     private static ConfigurationManager AddAppSettings(this ConfigurationManager configurationManager)
     {
