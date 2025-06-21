@@ -1,3 +1,6 @@
+using System.Globalization;
+using Infrastructure.Extensions;
+
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.Configure(builder.Configuration);
 
