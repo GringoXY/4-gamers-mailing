@@ -14,6 +14,9 @@ RUN dotnet publish -c ${BUILD_CONFIG} -o ${PUBLISH_DIR}
 FROM mcr.microsoft.com/dotnet/aspnet:8.0@sha256:6c4df091e4e531bb93bdbfe7e7f0998e7ced344f54426b7e874116a3dc3233ff AS runtime
 ARG PUBLISH_DIR=debug
 
+# Install krb5-libs for MailKit (libgssapi_krb5.so.2)
+RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=build /app/${PUBLISH_DIR} .
 
