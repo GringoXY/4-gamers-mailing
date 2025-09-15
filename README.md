@@ -1,4 +1,4 @@
-# 4-gamers-mailing
+# 4Gamers - Mailing
 
 Mailing is a .NET 8 Worker Service that consumes outbox messages from RabbitMQ, stores them as inbox messages in PostgreSQL, and sends transactional emails based on those messages. It implements the Outbox/Inbox pattern to achieve reliable, at-least-once message processing.
 
